@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import uz.pdp.online.jayxun.onlinerailwayticket.dto.request.SignUpReqDto;
 import uz.pdp.online.jayxun.onlinerailwayticket.entity.User;
+import uz.pdp.online.jayxun.onlinerailwayticket.jwt.JwtProvider;
 import uz.pdp.online.jayxun.onlinerailwayticket.mapper.UserMapper;
 import uz.pdp.online.jayxun.onlinerailwayticket.repo.UserRepository;
 
@@ -20,6 +21,7 @@ public class AuthController {
 
     private final UserMapper userMapper;
     private final UserRepository userRepository;
+    private final JwtProvider jwtProvider;
 
     @PostMapping("/sign-up")
     public ResponseEntity signUp(@RequestBody @Valid SignUpReqDto signUpReqDto) {
@@ -34,6 +36,8 @@ public class AuthController {
         entity.setEnabled(true);
         entity.setRole("ROLE_USER");
 
+        String token = jwtProvider.generateToken(entity);
+        System.out.println("token = " + token);
 
         User save = userRepository.save(entity);
         System.out.println("save = " + save);
