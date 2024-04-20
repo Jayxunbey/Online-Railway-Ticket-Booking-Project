@@ -1,48 +1,55 @@
 package uz.pdp.online.jayxun.onlinerailwayticket.controller;
 
+import io.jsonwebtoken.Claims;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import uz.pdp.online.jayxun.onlinerailwayticket.dto.request.SignUpReqDto;
-import uz.pdp.online.jayxun.onlinerailwayticket.entity.User;
+import uz.pdp.online.jayxun.onlinerailwayticket.dto.entityDtoWithoutId.UserDto;
+import uz.pdp.online.jayxun.onlinerailwayticket.dto.request.auth.LoginReqDto;
+import uz.pdp.online.jayxun.onlinerailwayticket.dto.request.auth.SignUpReqDto;
 import uz.pdp.online.jayxun.onlinerailwayticket.jwt.JwtProvider;
-import uz.pdp.online.jayxun.onlinerailwayticket.mapper.UserMapper;
-import uz.pdp.online.jayxun.onlinerailwayticket.repo.UserRepository;
+import uz.pdp.online.jayxun.onlinerailwayticket.jwt.JwtService;
+import uz.pdp.online.jayxun.onlinerailwayticket.service.UserService;
 
-import java.util.UUID;
+import javax.security.auth.login.AccountException;
+import javax.security.auth.login.AccountNotFoundException;
 
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final UserMapper userMapper;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final JwtProvider jwtProvider;
+    private final JwtService jwtService;
 
     @PostMapping("/sign-up")
-    public ResponseEntity signUp(@RequestBody @Valid SignUpReqDto signUpReqDto) {
+    public ResponseEntity<Object> signUp(@RequestBody @Valid SignUpReqDto signUpReqDto) throws AccountException {
 
+        System.out.println("\nsignUpReqDto = " + signUpReqDto);
 
-        System.out.println("signUpReqDto = " + signUpReqDto);
+        userService.registerUser(signUpReqDto);
 
-        User entity = userMapper.toEntity(signUpReqDto);
-        System.out.println("entity = " + entity);
+        return ResponseEntity.status(HttpStatus.CREATED).body("Created Successfully");
 
-        entity.setId(UUID.randomUUID().toString());
-        entity.setEnabled(true);
-        entity.setRole("ROLE_USER");
+    }
 
-        String token = jwtProvider.generateToken(entity);
-        System.out.println("token = " + token);
+    @PostMapping("/log-in")
+    public ResponseEntity<Object> login(@RequestBody @Valid LoginReqDto loginReqDto) throws AccountNotFoundException {
 
-        User save = userRepository.save(entity);
-        System.out.println("save = " + save);
+        System.out.println("\nloginReqDto = " + loginReqDto);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body("Succesfully");
+        UserDto userDto = userService.loginUserAndGetDto(loginReqDto);
+
+        String token = jwtProvider.generateToken(userDto, loginReqDto.isRemember_me());
+
+        String bearerToken = jwtService.addBearerToToken(token);
+
+        return ResponseEntity.accepted().header(HttpHeaders.AUTHORIZATION, bearerToken).body(userDto);
+
 
     }
 

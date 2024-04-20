@@ -1,0 +1,33 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/online_railway_booking_project
+    username: postgres
+    password: Jayxunbey2003
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+  security:
+    jwt:
+      expiration-time-minute: 10
+      expiration-time-minute-with-remember: 60
+      secret-key: KAjfenIF445FDafe353855-fd43lmgKFD9dkv
+
+  mail:
+    host: sandbox.smtp.mailtrap.io
+    port: 2525
+    ssl: no
+    tls: yes
+    username: 95a758ba3181ca
+    password: 48e3e21d3935be
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls: true
