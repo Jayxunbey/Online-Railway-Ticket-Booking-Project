@@ -4,12 +4,12 @@ import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 //import org.springframework.security.crypto.password.PasswordEncoder;
-import org.apache.logging.log4j.spi.LoggerContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import uz.pdp.online.jayxun.onlinerailwayticket.dto.custom.SendMailDto;
 import uz.pdp.online.jayxun.onlinerailwayticket.dto.entityDtoWithoutId.ConfirmSentCodeDto;
+import uz.pdp.online.jayxun.onlinerailwayticket.dto.entityDtoWithoutId.ConfirmSentCodeResDto;
 import uz.pdp.online.jayxun.onlinerailwayticket.dto.entityDtoWithoutId.UserDto;
 import uz.pdp.online.jayxun.onlinerailwayticket.dto.request.auth.LoginReqDto;
 import uz.pdp.online.jayxun.onlinerailwayticket.dto.request.auth.SignUpConfirmDto;
@@ -25,11 +25,9 @@ import uz.pdp.online.jayxun.onlinerailwayticket.repo.UserRepository;
 import javax.security.auth.login.AccountException;
 import javax.security.auth.login.AccountExpiredException;
 import javax.security.auth.login.AccountNotFoundException;
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.logging.Logger;
 
 @Service
 @RequiredArgsConstructor
@@ -60,7 +58,7 @@ public class UserService {
             }
     }
 
-    public ConfirmSentCodeDto registerUser(SignUpReqDto signUpReqDto, HttpServletRequest httpServletRequest) throws AccountException {
+    public ConfirmSentCodeResDto registerUser(SignUpReqDto signUpReqDto, HttpServletRequest httpServletRequest) throws AccountException {
 
         if (!signUpReqDto.getCurrent_password().equals(signUpReqDto.getRepeat_password())) {
             throw new AccountException("Passwords do not match");
@@ -72,18 +70,21 @@ public class UserService {
             throw new AccountException("User Already exists");
         }
 
-        ConfirmSentCode confirmSentCode = generateService.generateCodeAndSaveAndReturnDto(signUpReqDto, codeExpire);
+        ConfirmSentCodeDto confirmSentCodeDto = generateService.generateCodeAndSaveAndReturnDto(signUpReqDto, codeExpire);
+
+
 
         mailingService.sendMail(SendMailDto.builder()
                 .to(signUpReqDto.getEmail())
                 .subject("Confirm Account (Online Railway Booking)")
-                .content(generateService.generateCodeWebPage(confirmSentCode,httpServletRequest))
+                .content(generateService.generateCodeWebPage(confirmSentCodeDto,httpServletRequest))
                 .build());
 
-        System.out.println("habar yuborildi");
-
-
-        return confirmSentCodeMapper.toDto(confirmSentCode);
+        return ConfirmSentCodeResDto
+                .builder()
+                .token(confirmSentCodeDto.getToken())
+                .expire(confirmSentCodeDto.getExpire())
+                .build();
 
     }
 
@@ -109,6 +110,14 @@ public class UserService {
             throw new AccountException("Try again");
         }
 
+        ConfirmSentCode confirmSentCode = byToken.get();
+
+        if (!passwordEncoder.matches(signUpReqDto.getCode(), confirmSentCode.getCode())) {
+            System.out.println("signUpReqDto.getCode() = " + signUpReqDto.getCode());
+            System.out.println("confirmSentCode.getPassword() = " + confirmSentCode.getPassword());
+            throw new AccountException("Wrong password");
+        }
+
         Claims parse = jwtProvider.parse(signUpReqDto.getToken());
         String email = parse.getSubject();
         System.out.println("email = " + email);
@@ -127,6 +136,8 @@ public class UserService {
         } else {
             throw new AccountExpiredException("Account has expired");
         }
+
+
         return true;
     }
 }

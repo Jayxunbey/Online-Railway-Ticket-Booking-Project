@@ -1,6 +1,5 @@
 package uz.pdp.online.jayxun.onlinerailwayticket.dto.entityDtoWithoutId;
 
-
 import lombok.Builder;
 import lombok.Value;
 import uz.pdp.online.jayxun.onlinerailwayticket.entity.ConfirmSentCode;
@@ -13,8 +12,7 @@ import java.util.Date;
  */
 @Value
 @Builder
-public class ConfirmSentCodeDto implements Serializable {
+public class ConfirmSentCodeResDto implements Serializable {
     String token;
     Date expire;
-    String confirmCode;
 }

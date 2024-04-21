@@ -1,17 +1,14 @@
 package uz.pdp.online.jayxun.onlinerailwayticket.controller;
 
-import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.DispatcherServlet;
-import uz.pdp.online.jayxun.onlinerailwayticket.dto.entityDtoWithoutId.ConfirmSentCodeDto;
+import uz.pdp.online.jayxun.onlinerailwayticket.dto.entityDtoWithoutId.ConfirmSentCodeResDto;
 import uz.pdp.online.jayxun.onlinerailwayticket.dto.entityDtoWithoutId.UserDto;
 import uz.pdp.online.jayxun.onlinerailwayticket.dto.request.auth.LoginReqDto;
 import uz.pdp.online.jayxun.onlinerailwayticket.dto.request.auth.SignUpConfirmDto;
@@ -22,7 +19,6 @@ import uz.pdp.online.jayxun.onlinerailwayticket.service.UserService;
 
 import javax.security.auth.login.AccountException;
 import javax.security.auth.login.AccountNotFoundException;
-import java.util.Enumeration;
 
 @RestController
 @RequestMapping(path = "/auth", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -41,9 +37,9 @@ public class AuthController {
 
         System.out.println("\nsignUpReqDto = " + signUpReqDto);
 
-        ConfirmSentCodeDto confirmSentCodeDto = userService.registerUser(signUpReqDto, servletRequest);
+        ConfirmSentCodeResDto confirmSentCodeResDto = userService.registerUser(signUpReqDto, servletRequest);
 
-        return ResponseEntity.status(HttpStatus.OK).body(confirmSentCodeDto);
+        return ResponseEntity.status(HttpStatus.OK).body(confirmSentCodeResDto);
 
     }
 

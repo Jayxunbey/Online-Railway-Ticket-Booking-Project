@@ -11,11 +11,15 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import uz.pdp.online.jayxun.onlinerailwayticket.dto.custom.SendMailDto;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 @Component
 @RequiredArgsConstructor
 public class MailingService {
 
     private final JavaMailSender mailSender;
+    private final Logger logger;
 
     @Async
     public void sendMail(SendMailDto sendMailDto) {
@@ -27,6 +31,7 @@ public class MailingService {
 
         mailSender.send(message);
 
+        logger.log(Level.INFO, "Message sent to " + sendMailDto.getTo());
 
     }
 

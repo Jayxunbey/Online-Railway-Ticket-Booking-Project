@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.TaskExecutor;
 
 import java.util.Random;
+import java.util.logging.Logger;
 
 @Configuration
 @RequiredArgsConstructor
@@ -22,6 +23,11 @@ public class CustomConfig {
     @Bean
     public Random getRandom() {
         return new Random();
+    }
+
+    @Bean
+    public Logger getLogger() {
+        return Logger.getAnonymousLogger();
     }
 
 }
