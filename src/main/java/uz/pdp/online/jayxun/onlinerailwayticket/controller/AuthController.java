@@ -37,7 +37,7 @@ public class AuthController {
 
 
     @PostMapping(path = "/sign-up", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-    public ResponseEntity<Object> signUp(SignUpReqDto signUpReqDto, HttpServletRequest servletRequest) throws AccountException {
+    public ResponseEntity<Object> signUp(@Valid SignUpReqDto signUpReqDto, HttpServletRequest servletRequest) throws AccountException {
 
         System.out.println("\nsignUpReqDto = " + signUpReqDto);
 
@@ -48,13 +48,15 @@ public class AuthController {
     }
 
     @PostMapping(path = "/sign-up-confirm", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-    public ResponseEntity<Object> signUp(SignUpConfirmDto signUpReqDto) throws AccountException {
+    public ResponseEntity<Object> signUp(@Valid SignUpConfirmDto signUpReqDto) throws AccountException {
 
         System.out.println("\nsignUpReqDto = " + signUpReqDto);
 
-        ConfirmSentCodeDto confirmSentCodeDto = userService.confirmUser(signUpReqDto);
+        if (userService.confirmUser(signUpReqDto)) {
 
-        return ResponseEntity.status(HttpStatus.OK).body(confirmSentCodeDto);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Created Successfully");
+        }
+        return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Not Acceptable");
 
     }
 

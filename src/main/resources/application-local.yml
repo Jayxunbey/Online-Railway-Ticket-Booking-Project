@@ -21,7 +21,8 @@ spring:
     code:
       sign:
         up:
-          expire-minute: 3
+          expire-minute: 2
+          length: 4
 
   mail:
     host: sandbox.smtp.mailtrap.io

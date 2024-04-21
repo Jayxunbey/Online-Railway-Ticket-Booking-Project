@@ -1,6 +1,9 @@
 package uz.pdp.online.jayxun.onlinerailwayticket.service;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.data.auditing.CurrentDateTimeProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,44 +24,35 @@ public class GenerateService {
     private final JwtProvider jwtProvider;
     private final ConfirmSentCodeRepository codeRepository;
     private final PasswordEncoder passwordEncoder;
+    private final Random random;
 
-    public String generateCodeWebPage(ConfirmSentCode confirmSentCode) {
+    @Value("${spring.security.code.sign.up.length}")
+    private int randomNumberLength;
 
-        return new String(confirmSentCode.getCode());
-
+    public String generateCodeWebPage(ConfirmSentCode confirmSentCode, HttpServletRequest request) {
+        return confirmSentCode.getCode();
     }
 
     public ConfirmSentCode generateCodeAndSaveAndReturnDto(SignUpReqDto signUpReqDto, int codeExpireMinute) {
 
         String token = jwtProvider.generateTokenForOtherWork(signUpReqDto.getEmail(), codeExpireMinute);
 
-        String confirmationCode = generateRandomCode(6);
+        String confirmationCode = generateRandomCode(randomNumberLength);
         String encode = passwordEncoder.encode(signUpReqDto.getCurrent_password());
 
         ConfirmSentCode confirmSentCode = new ConfirmSentCode();
         confirmSentCode.setCode(confirmationCode);
         confirmSentCode.setToken(token);
-        confirmSentCode.setExpire(new Date(System.currentTimeMillis() + codeExpireMinute * 60 * 1000));
+        confirmSentCode.setExpire(new Date(System.currentTimeMillis() + (long) codeExpireMinute * 60 * 1000));
         confirmSentCode.setPassword(encode);
         confirmSentCode.setRole("ROLE_USER");
-
         codeRepository.save(confirmSentCode);
         return confirmSentCode;
-
     }
 
     private String generateRandomCode(int numberLength) {
-        int i = (int) (Math.random() * Math.pow(10, numberLength+1));
-
-        String substring = String.valueOf(i).substring(1);
-
-        int repeat_i = numberLength- substring.length();
-
-
-        for (int i1 = 1; i1 <= repeat_i; i1++) {
-            substring = "0"+substring;
-        }
-
-        return substring;
+        int randomNumber = random.nextInt((int) Math.pow(10, numberLength-1), (int) Math.pow(10, numberLength ));
+        System.out.println("randomNumber = " + randomNumber);
+        return String.valueOf(randomNumber);
     }
 }

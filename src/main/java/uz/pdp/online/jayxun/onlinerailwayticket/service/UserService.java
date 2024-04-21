@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 //import org.springframework.security.crypto.password.PasswordEncoder;
+import org.apache.logging.log4j.spi.LoggerContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,11 +23,13 @@ import uz.pdp.online.jayxun.onlinerailwayticket.repo.ConfirmSentCodeRepository;
 import uz.pdp.online.jayxun.onlinerailwayticket.repo.UserRepository;
 
 import javax.security.auth.login.AccountException;
+import javax.security.auth.login.AccountExpiredException;
 import javax.security.auth.login.AccountNotFoundException;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 @Service
 @RequiredArgsConstructor
@@ -71,12 +74,10 @@ public class UserService {
 
         ConfirmSentCode confirmSentCode = generateService.generateCodeAndSaveAndReturnDto(signUpReqDto, codeExpire);
 
-        System.out.println("confirmSentCode = " + confirmSentCode);
-
         mailingService.sendMail(SendMailDto.builder()
-                .to("muxammadovjayxun@gmail.com")
+                .to(signUpReqDto.getEmail())
                 .subject("Confirm Account (Online Railway Booking)")
-                .content(generateService.generateCodeWebPage(confirmSentCode))
+                .content(generateService.generateCodeWebPage(confirmSentCode,httpServletRequest))
                 .build());
 
         System.out.println("habar yuborildi");
@@ -100,11 +101,11 @@ public class UserService {
         return userMapper.toDto(user);
     }
 
-    public ConfirmSentCodeDto confirmUser(SignUpConfirmDto signUpReqDto) throws AccountException {
+    public boolean confirmUser(SignUpConfirmDto signUpReqDto) throws AccountException {
 
 
         Optional<ConfirmSentCode> byToken = confirmSentCodeRepository.findByToken(signUpReqDto.getToken());
-        if (!byToken.isPresent()) {
+        if (byToken.isEmpty()) {
             throw new AccountException("Try again");
         }
 
@@ -115,17 +116,17 @@ public class UserService {
         boolean after = byToken.get().getExpire().after(new Date());
 
         System.out.println("after = " + after);
-
-        User user = new User();
-        user.setId(UUID.randomUUID().toString());
-        user.setEmail(email);
-        user.setRole(byToken.get().getRole());
-        user.setEnabled(true);
-        user.setPassword(byToken.get().getPassword());
-
-        User save = userRepository.save(user);
-
-
-
+        if (after){
+            User user = new User();
+            user.setId(UUID.randomUUID().toString());
+            user.setEmail(email);
+            user.setRole(byToken.get().getRole());
+            user.setEnabled(true);
+            user.setPassword(byToken.get().getPassword());
+            User save = userRepository.save(user);
+        } else {
+            throw new AccountExpiredException("Account has expired");
+        }
+        return true;
     }
 }

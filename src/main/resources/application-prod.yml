@@ -22,4 +22,16 @@ spring:
     code:
       sign:
         up:
-          expire-minute: 5
+          expire-minute: 3
+          length: 4
+
+  mail:
+    host: smtp.gmail.com
+    port: 2525
+    username: muxammedovjayxun@gmail.com
+    password: 48e3e21d3935be
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls: true
