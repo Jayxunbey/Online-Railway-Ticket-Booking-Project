@@ -19,3 +19,7 @@ spring:
       expiration-time-minute-with-remember: 60
       secret-key: KAjfenIF445FDafe353855-fd43lmgKFD9dkv
 
+    code:
+      sign:
+        up:
+          expire-minute: 5

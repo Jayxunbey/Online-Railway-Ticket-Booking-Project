@@ -1,17 +1,30 @@
 package uz.pdp.online.jayxun.onlinerailwayticket.service;
 
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+//import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import uz.pdp.online.jayxun.onlinerailwayticket.dto.custom.SendMailDto;
+import uz.pdp.online.jayxun.onlinerailwayticket.dto.entityDtoWithoutId.ConfirmSentCodeDto;
 import uz.pdp.online.jayxun.onlinerailwayticket.dto.entityDtoWithoutId.UserDto;
 import uz.pdp.online.jayxun.onlinerailwayticket.dto.request.auth.LoginReqDto;
+import uz.pdp.online.jayxun.onlinerailwayticket.dto.request.auth.SignUpConfirmDto;
 import uz.pdp.online.jayxun.onlinerailwayticket.dto.request.auth.SignUpReqDto;
+import uz.pdp.online.jayxun.onlinerailwayticket.entity.ConfirmSentCode;
 import uz.pdp.online.jayxun.onlinerailwayticket.entity.User;
+import uz.pdp.online.jayxun.onlinerailwayticket.jwt.JwtProvider;
+import uz.pdp.online.jayxun.onlinerailwayticket.mapper.ConfirmSentCodeMapper;
 import uz.pdp.online.jayxun.onlinerailwayticket.mapper.UserMapper;
+import uz.pdp.online.jayxun.onlinerailwayticket.repo.ConfirmSentCodeRepository;
 import uz.pdp.online.jayxun.onlinerailwayticket.repo.UserRepository;
 
 import javax.security.auth.login.AccountException;
 import javax.security.auth.login.AccountNotFoundException;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,8 +33,17 @@ import java.util.UUID;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final ConfirmSentCodeRepository confirmSentCodeRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final MailingService mailingService;
+    private final GenerateService generateService;
+    private final JwtProvider jwtProvider;
+
+
+    @Value("${spring.security.code.sign.up.expire-minute}")
+    private int codeExpire;
+    private final ConfirmSentCodeMapper confirmSentCodeMapper;
 //    private final
 
     private User getByEmail(String email) throws AccountNotFoundException {
@@ -35,7 +57,7 @@ public class UserService {
             }
     }
 
-    public void registerUser(SignUpReqDto signUpReqDto) throws AccountException {
+    public ConfirmSentCodeDto registerUser(SignUpReqDto signUpReqDto, HttpServletRequest httpServletRequest) throws AccountException {
 
         if (!signUpReqDto.getCurrent_password().equals(signUpReqDto.getRepeat_password())) {
             throw new AccountException("Passwords do not match");
@@ -47,19 +69,21 @@ public class UserService {
             throw new AccountException("User Already exists");
         }
 
-        String encode = passwordEncoder.encode(signUpReqDto.getCurrent_password());
+        ConfirmSentCode confirmSentCode = generateService.generateCodeAndSaveAndReturnDto(signUpReqDto, codeExpire);
 
-        entity.setId(UUID.randomUUID().toString());
-        entity.setEmail(entity.getEmail().toLowerCase());
-        entity.setPassword(encode);
-        entity.setEnabled(true);
-        entity.setRole("ROLE_USER");
+        System.out.println("confirmSentCode = " + confirmSentCode);
 
-        System.out.println("entity.getEmail().toLowerCase() = " + entity.getEmail().toLowerCase());
-        System.out.println("encode = " + encode);
+        mailingService.sendMail(SendMailDto.builder()
+                .to("muxammadovjayxun@gmail.com")
+                .subject("Confirm Account (Online Railway Booking)")
+                .content(generateService.generateCodeWebPage(confirmSentCode))
+                .build());
 
-        User save = userRepository.save(entity);
-        System.out.println(this.getClass().toString()+" //: "+"save = " + save);
+        System.out.println("habar yuborildi");
+
+
+        return confirmSentCodeMapper.toDto(confirmSentCode);
+
     }
 
     public UserDto loginUserAndGetDto(LoginReqDto loginReqDto) throws AccountNotFoundException {
@@ -74,5 +98,34 @@ public class UserService {
             throw new AccountNotFoundException("User not found");
         }
         return userMapper.toDto(user);
+    }
+
+    public ConfirmSentCodeDto confirmUser(SignUpConfirmDto signUpReqDto) throws AccountException {
+
+
+        Optional<ConfirmSentCode> byToken = confirmSentCodeRepository.findByToken(signUpReqDto.getToken());
+        if (!byToken.isPresent()) {
+            throw new AccountException("Try again");
+        }
+
+        Claims parse = jwtProvider.parse(signUpReqDto.getToken());
+        String email = parse.getSubject();
+        System.out.println("email = " + email);
+
+        boolean after = byToken.get().getExpire().after(new Date());
+
+        System.out.println("after = " + after);
+
+        User user = new User();
+        user.setId(UUID.randomUUID().toString());
+        user.setEmail(email);
+        user.setRole(byToken.get().getRole());
+        user.setEnabled(true);
+        user.setPassword(byToken.get().getPassword());
+
+        User save = userRepository.save(user);
+
+
+
     }
 }
