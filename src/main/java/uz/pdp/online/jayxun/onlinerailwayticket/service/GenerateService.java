@@ -11,6 +11,13 @@ import uz.pdp.online.jayxun.onlinerailwayticket.entity.ConfirmSentCode;
 import uz.pdp.online.jayxun.onlinerailwayticket.jwt.JwtProvider;
 import uz.pdp.online.jayxun.onlinerailwayticket.repo.ConfirmSentCodeRepository;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Random;
 
@@ -27,7 +34,63 @@ public class GenerateService {
     private int randomNumberLength;
 
     public String generateCodeWebPage(ConfirmSentCodeDto confirmSentCodeDto, HttpServletRequest request) {
-        return confirmSentCodeDto.getConfirmCode();
+
+        String platformOs = request.getHeader("sec-ch-ua-platform");
+        String remoteAddr = request.getRemoteAddr();
+        String browserFullData = request.getHeader("sec-ch-ua");
+        String confirmCode = confirmSentCodeDto.getConfirmCode();
+        int expireMinuteValue = confirmSentCodeDto.getExpireMinuteValue();
+
+        ///////////////////////////////////////////////////////////////
+
+        if(platformOs==null || platformOs.isEmpty()) platformOs ="unknown";
+        if(remoteAddr==null || remoteAddr.isEmpty()) remoteAddr ="unknown";
+        if(browserFullData==null || browserFullData.isEmpty()) browserFullData ="unknown";
+
+
+        String patternDate = "EEE, MMMM d, yyyy";
+        String patternTime = "hh:mm:ss a (Z)";
+
+        DateFormat dateFormat = new SimpleDateFormat(patternDate);
+        DateFormat timeFormat = new SimpleDateFormat(patternTime);
+
+        Date today = Calendar.getInstance().getTime();
+//
+        String formatDate = dateFormat.format(today);
+        String formatTime = timeFormat.format(today);
+
+        String templateHtml;
+
+        try {
+            FileInputStream fileInputStream = new FileInputStream("F:/PdpAcademy/modul9/resourse/html/confirmation_code_template.html");
+            byte[] string1 = fileInputStream.readAllBytes();
+            fileInputStream.close();
+
+            templateHtml = new String(string1);
+
+            templateHtml = templateHtml.replace("full_information_browser_dinamic", browserFullData)
+                    .replace("ip_address_client_dinamic", remoteAddr)
+                    .replace("full_information_browser_dinamic", browserFullData)
+                    .replace("os_information_client_dinamic", platformOs)
+                    .replace("time_day_month_year_client_dinamic", formatDate)
+                    .replace("time_clock_gmt_dinamic", formatTime)
+                    .replace("confirmation_code_place_holder_dinamic", confirmCode)
+                    .replace("expire_minute_place_holder_dinamic", String.valueOf(expireMinuteValue));
+
+            FileWriter fileWriter = new FileWriter("F:/PdpAcademy/modul9/resourse/html/confirmation_code_template_generated.html");
+            fileWriter.write(templateHtml);
+            fileWriter.close();
+
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        //////////////////////////////////////////////////////////////
+
+
+        return templateHtml;
     }
 
     public ConfirmSentCodeDto generateCodeAndSaveAndReturnDto(SignUpReqDto signUpReqDto, int codeExpireMinute) {
@@ -55,6 +118,7 @@ public class GenerateService {
                 .token(token)
                 .confirmCode(confirmationCode)
                 .expire(expiration)
+                .expireMinuteValue(codeExpireMinute)
                 .build();
 
 //        return confirmSentCode;

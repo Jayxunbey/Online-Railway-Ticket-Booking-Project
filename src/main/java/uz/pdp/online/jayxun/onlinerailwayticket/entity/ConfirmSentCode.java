@@ -14,6 +14,7 @@ import java.util.Date;
 @Setter
 @Entity
 @Table(name = "confirm_sent_code")
+
 public class ConfirmSentCode {
     @Id
     @Column(name = "token", nullable = false)

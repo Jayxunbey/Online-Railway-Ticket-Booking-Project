@@ -1,6 +1,7 @@
 package uz.pdp.online.jayxun.onlinerailwayticket.service;
 
 import io.jsonwebtoken.Claims;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 //import org.springframework.security.crypto.password.PasswordEncoder;
@@ -73,17 +74,21 @@ public class UserService {
         ConfirmSentCodeDto confirmSentCodeDto = generateService.generateCodeAndSaveAndReturnDto(signUpReqDto, codeExpire);
 
 
-
-        mailingService.sendMail(SendMailDto.builder()
-                .to(signUpReqDto.getEmail())
-                .subject("Confirm Account (Online Railway Booking)")
-                .content(generateService.generateCodeWebPage(confirmSentCodeDto,httpServletRequest))
-                .build());
+        try {
+            mailingService.sendMail(SendMailDto.builder()
+                    .to(signUpReqDto.getEmail())
+                    .subject("Confirm Account (Online Railway Booking)")
+                    .content(generateService.generateCodeWebPage(confirmSentCodeDto,httpServletRequest))
+                    .build());
+        } catch (MessagingException e) {
+            throw new RuntimeException(e);
+        }
 
         return ConfirmSentCodeResDto
                 .builder()
                 .token(confirmSentCodeDto.getToken())
                 .expire(confirmSentCodeDto.getExpire())
+                .expiredMinute(confirmSentCodeDto.getExpireMinuteValue())
                 .build();
 
     }

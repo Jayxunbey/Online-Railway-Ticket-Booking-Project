@@ -1,5 +1,8 @@
 package uz.pdp.online.jayxun.onlinerailwayticket.service;
 
+import jakarta.mail.Message;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,14 +25,25 @@ public class MailingService {
     private final Logger logger;
 
     @Async
-    public void sendMail(SendMailDto sendMailDto) {
+    public void sendMail(SendMailDto sendMailDto) throws MessagingException {
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(sendMailDto.getTo());
-        message.setSubject(sendMailDto.getSubject());
-        message.setText(sendMailDto.getContent());
+        MimeMessage mimeMessage = mailSender.createMimeMessage();
+//
+//        SimpleMailMessage message = new SimpleMailMessage();
+//        message.setTo(sendMailDto.getTo());
+//        message.setSubject(sendMailDto.getSubject());
+//        message.setText(sendMailDto.getContent());
 
-        mailSender.send(message);
+        mimeMessage.setSubject(sendMailDto.getSubject());
+        mimeMessage.setContent(sendMailDto.getContent(), "text/html;charset=utf-8");
+        mimeMessage.setRecipient(Message.RecipientType.TO, new InternetAddress(sendMailDto.getTo()));
+//        mimeMessage
+//        mimeMessage.setContent();
+
+
+        mailSender.send(mimeMessage);
+
+//        mailSender.send(message);
 
         logger.log(Level.INFO, "Message sent to " + sendMailDto.getTo());
 

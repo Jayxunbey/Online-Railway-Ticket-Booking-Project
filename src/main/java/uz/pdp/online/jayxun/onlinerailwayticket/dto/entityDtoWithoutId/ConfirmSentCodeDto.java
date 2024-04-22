@@ -17,4 +17,5 @@ public class ConfirmSentCodeDto implements Serializable {
     String token;
     Date expire;
     String confirmCode;
+    int expireMinuteValue;
 }

@@ -15,4 +15,5 @@ import java.util.Date;
 public class ConfirmSentCodeResDto implements Serializable {
     String token;
     Date expire;
+    int expiredMinute;
 }
