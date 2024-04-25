@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 //import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import uz.pdp.online.jayxun.onlinerailwayticket.dto.custom.SendMailDto;
@@ -37,7 +38,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final ConfirmSentCodeRepository confirmSentCodeRepository;
     private final UserMapper userMapper;
-    private final PasswordEncoder passwordEncoder;
+//    private final PasswordEncoder passwordEncoder;
     private final MailingService mailingService;
     private final GenerateService generateService;
     private final JwtProvider jwtProvider;
@@ -74,15 +75,15 @@ public class UserService {
         ConfirmSentCodeDto confirmSentCodeDto = generateService.generateCodeAndSaveAndReturnDto(signUpReqDto, codeExpire);
 
 
-        try {
+        System.out.println("mailgacha qismi ishladi");
+
             mailingService.sendMail(SendMailDto.builder()
                     .to(signUpReqDto.getEmail())
                     .subject("Confirm Account (Online Railway Booking)")
                     .content(generateService.generateCodeWebPage(confirmSentCodeDto,httpServletRequest))
                     .build());
-        } catch (MessagingException e) {
-            throw new RuntimeException(e);
-        }
+
+        System.out.println("mail qismi ishladi");
 
         return ConfirmSentCodeResDto
                 .builder()
@@ -97,6 +98,8 @@ public class UserService {
 
         User user = getByEmail(loginReqDto.getEmail());
 
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
         boolean matches = passwordEncoder.matches(loginReqDto.getPassword(), user.getPassword());
         if (!matches) {
             throw new AccountNotFoundException("Username or password incorrect");
@@ -109,6 +112,7 @@ public class UserService {
 
     public boolean confirmUser(SignUpConfirmDto signUpReqDto) throws AccountException {
 
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
         Optional<ConfirmSentCode> byToken = confirmSentCodeRepository.findByToken(signUpReqDto.getToken());
         if (byToken.isEmpty()) {
@@ -144,5 +148,17 @@ public class UserService {
 
 
         return true;
+    }
+
+    public User getUserByEmail(String email) throws AccountNotFoundException {
+        Optional<User> byEmailIgnoreCase = userRepository.findByEmailIgnoreCase(email);
+        if (byEmailIgnoreCase.isPresent()) {
+            return byEmailIgnoreCase.get();
+        }
+
+        throw new AccountNotFoundException("User Not found");
+
+
+
     }
 }

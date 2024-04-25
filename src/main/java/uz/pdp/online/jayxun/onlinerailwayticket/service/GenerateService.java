@@ -3,6 +3,7 @@ package uz.pdp.online.jayxun.onlinerailwayticket.service;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import uz.pdp.online.jayxun.onlinerailwayticket.dto.entityDtoWithoutId.ConfirmSentCodeDto;
@@ -27,7 +28,7 @@ public class GenerateService {
 
     private final JwtProvider jwtProvider;
     private final ConfirmSentCodeRepository codeRepository;
-    private final PasswordEncoder passwordEncoder;
+//    private final PasswordEncoder passwordEncoder;
     private final Random random;
 
     @Value("${spring.security.code.sign.up.length}")
@@ -69,7 +70,7 @@ public class GenerateService {
             templateHtml = new String(string1);
 
             templateHtml = templateHtml.replace("full_information_browser_dinamic", browserFullData)
-                    .replace("ip_address_client_dinamic", remoteAddr)
+                    .replace("ip_address_client_dinamic", "")
                     .replace("full_information_browser_dinamic", browserFullData)
                     .replace("os_information_client_dinamic", platformOs)
                     .replace("time_day_month_year_client_dinamic", formatDate)
@@ -96,6 +97,8 @@ public class GenerateService {
     public ConfirmSentCodeDto generateCodeAndSaveAndReturnDto(SignUpReqDto signUpReqDto, int codeExpireMinute) {
 
         String token = jwtProvider.generateTokenForOtherWork(signUpReqDto.getEmail(), codeExpireMinute);
+
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
         String confirmationCode = generateRandomCode(randomNumberLength);
         String encodedConfirmationCode = passwordEncoder.encode(confirmationCode);

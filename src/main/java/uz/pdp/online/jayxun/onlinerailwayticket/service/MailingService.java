@@ -5,7 +5,9 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.angus.mail.util.MailConnectException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.MailException;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -25,7 +27,7 @@ public class MailingService {
     private final Logger logger;
 
     @Async
-    public void sendMail(SendMailDto sendMailDto) throws MessagingException {
+    public void sendMail(SendMailDto sendMailDto) {
 
         MimeMessage mimeMessage = mailSender.createMimeMessage();
 //
@@ -34,19 +36,17 @@ public class MailingService {
 //        message.setSubject(sendMailDto.getSubject());
 //        message.setText(sendMailDto.getContent());
 
-        mimeMessage.setSubject(sendMailDto.getSubject());
-        mimeMessage.setContent(sendMailDto.getContent(), "text/html;charset=utf-8");
-        mimeMessage.setRecipient(Message.RecipientType.TO, new InternetAddress(sendMailDto.getTo()));
-//        mimeMessage
-//        mimeMessage.setContent();
+        try {
+            mimeMessage.setSubject(sendMailDto.getSubject());
+            mimeMessage.setContent(sendMailDto.getContent(), "text/html;charset=utf-8");
+            mimeMessage.setRecipient(Message.RecipientType.TO, new InternetAddress(sendMailDto.getTo()));
+            mailSender.send(mimeMessage);
+
+        } catch (MessagingException e) {
+            Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, e.getMessage(), e);
+        }
 
 
-        mailSender.send(mimeMessage);
-
-//        mailSender.send(message);
-
-        logger.log(Level.INFO, "Message sent to " + sendMailDto.getTo());
 
     }
-
 }

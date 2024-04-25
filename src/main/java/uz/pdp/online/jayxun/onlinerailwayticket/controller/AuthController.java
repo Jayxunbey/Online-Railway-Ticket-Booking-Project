@@ -21,7 +21,7 @@ import javax.security.auth.login.AccountException;
 import javax.security.auth.login.AccountNotFoundException;
 
 @RestController
-@RequestMapping(path = "/auth", consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE, MediaType.APPLICATION_JSON_VALUE}, produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = "/auth")
 @RequiredArgsConstructor
 
 public class AuthController {
@@ -31,19 +31,27 @@ public class AuthController {
     private final JwtService jwtService;
 //    private final S
 
+    @GetMapping(path = "/sign-up")
+    public ResponseEntity<Object> signUp() throws AccountException {
 
-    @PostMapping(path = "/sign-up")
+        return ResponseEntity.status(HttpStatus.OK).body("Keldi");
+
+    }
+
+    @PostMapping(path = "/sign-up",consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE, MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<Object> signUp(@Valid SignUpReqDto signUpReqDto, HttpServletRequest servletRequest) throws AccountException {
 
         System.out.println("\nsignUpReqDto = " + signUpReqDto);
 
         ConfirmSentCodeResDto confirmSentCodeResDto = userService.registerUser(signUpReqDto, servletRequest);
 
+        System.out.println("return joyiga keldi");
+
         return ResponseEntity.status(HttpStatus.OK).body(confirmSentCodeResDto);
 
     }
 
-    @PostMapping(path = "/sign-up-confirm")
+    @PostMapping(path = "/sign-up-confirm", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public ResponseEntity<Object> signUp(@Valid SignUpConfirmDto signUpReqDto) throws AccountException {
 
         System.out.println("\nsignUpReqDto = " + signUpReqDto);

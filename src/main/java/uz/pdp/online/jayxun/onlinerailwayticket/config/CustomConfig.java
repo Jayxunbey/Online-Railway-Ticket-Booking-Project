@@ -7,6 +7,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Random;
 import java.util.logging.Logger;
@@ -15,8 +17,6 @@ import java.util.logging.Logger;
 @RequiredArgsConstructor
 public class CustomConfig {
 
-    @Qualifier("applicationTaskExecutor")
-    private final TaskExecutor taskExecutor;
 
     private final ApplicationContext applicationContext;
 
@@ -29,6 +29,7 @@ public class CustomConfig {
     public Logger getLogger() {
         return Logger.getAnonymousLogger();
     }
+
 
 }
 
