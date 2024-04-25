@@ -21,7 +21,7 @@ import javax.security.auth.login.AccountException;
 import javax.security.auth.login.AccountNotFoundException;
 
 @RestController
-@RequestMapping(path = "/auth", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = "/auth", consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE, MediaType.APPLICATION_JSON_VALUE}, produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 
 public class AuthController {
@@ -32,7 +32,7 @@ public class AuthController {
 //    private final S
 
 
-    @PostMapping(path = "/sign-up", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    @PostMapping(path = "/sign-up")
     public ResponseEntity<Object> signUp(@Valid SignUpReqDto signUpReqDto, HttpServletRequest servletRequest) throws AccountException {
 
         System.out.println("\nsignUpReqDto = " + signUpReqDto);
@@ -43,7 +43,7 @@ public class AuthController {
 
     }
 
-    @PostMapping(path = "/sign-up-confirm", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    @PostMapping(path = "/sign-up-confirm")
     public ResponseEntity<Object> signUp(@Valid SignUpConfirmDto signUpReqDto) throws AccountException {
 
         System.out.println("\nsignUpReqDto = " + signUpReqDto);

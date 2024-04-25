@@ -2,6 +2,7 @@ package uz.pdp.online.jayxun.onlinerailwayticket.dto.request.auth;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
+import lombok.Getter;
 import lombok.ToString;
 import lombok.Value;
 
@@ -11,7 +12,7 @@ import java.io.Serializable;
  * DTO for {@link uz.pdp.online.jayxun.onlinerailwayticket.entity.User}
  */
 @Value
-@ToString
+//@ToString
 public class SignUpReqDto implements Serializable {
     @Email(message = "Email is invalid")
     String email;

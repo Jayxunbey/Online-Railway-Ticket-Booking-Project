@@ -1,7 +1,7 @@
 spring:
   config:
     activate:
-      on-profile: prod
+      on-profile: dev
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/online_railway_booking_project
@@ -27,11 +27,13 @@ spring:
 
   mail:
     host: smtp.gmail.com
-    port: 2525
+    port: 465
     username: muxammedovjayxun@gmail.com
-    password: 48e3e21d3935be
+    password: glhgmbuolybjegno
     properties:
       mail:
         smtp:
           auth: true
           starttls: true
+          ssl:
+            enable: true
